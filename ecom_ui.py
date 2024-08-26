@@ -28,7 +28,7 @@ ma = Marshmallow(app)
 class Customer(Base):
     __tablename__ = 'customer' ## establishing the name of the table.
     
-    ###creating te cloumns for the table.
+    ###creating te columns for the table.
 
     id: Mapped[int] = mapped_column(primary_key=True)
     customer_name: Mapped[str] = mapped_column(db.String(75), nullable = False)
@@ -74,7 +74,7 @@ class Orders(Base):
 
 ###executing table structure.
 with app.app_context():
-    # db.drop_all() ### used to drop all tables and rerun a fresh instance.
+    # db.drop_all() ### used to drop all tables and rerun a fresh instance. ONLY ENABLE TO DROP ALL TABLE AND RESET DB.
     db.create_all()
 
 ### creating the neccessary Schema and fields
@@ -102,7 +102,7 @@ class ProductSchema(ma.Schema):
     availability = fields.Bool(required = True) #
 
     class Meta:
-        fields = ('id', 'product_name', 'price', 'availability') #
+        fields = ('id', 'product_name', 'price', 'availability') 
 
 
 class OrderSchema(ma.Schema):
@@ -125,7 +125,7 @@ orders_schema = OrderSchema(many= True)
 product_schema = ProductSchema()
 products_schema = ProductSchema(many= True)
 
-### home screen
+### HomeScreen/MainScreen
 
 @app.route('/')
 def home():
@@ -301,7 +301,7 @@ def delete_product(id):
     db.session.commit()
     return jsonify({"Message": "The Product you selected has been delete from inventory. Thank you!"}), 200
 
-#### Orders Manipulation
+#### Orders Manipulation ###
 
 ### Order generator.
     ###The status column will default to "Placed" once a new order is placed.
