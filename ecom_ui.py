@@ -1,3 +1,5 @@
+###Importing all the nesscessary libraries.
+
 from flask import Flask, jsonify, request
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
@@ -9,6 +11,7 @@ from sqlalchemy import select, delete
 
 app = Flask(__name__) # CREATING AN INSTANCE OF THE FLASK CLASS FOR OUR APP TO USE
 
+#establishing a connection, using SQL alchemy the root path to my database.
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+mysqlconnector://root:@localhost/ecomv3'
 
 class Base(DeclarativeBase):
@@ -17,7 +20,7 @@ class Base(DeclarativeBase):
 db = SQLAlchemy(app, model_class =Base)
 ma = Marshmallow(app)
 
-#### The following below is creating the necessary tables.
+#### The following below are the process of  creating the necessary tables/models.
     ### Customers
     ### Products
     ### Orders
@@ -46,22 +49,22 @@ order_products = db.Table(
     db.Column('product_id', db.ForeignKey('products.id'), primary_key = True)
 )
 
-### creating the products table
+### Creating the products table
 class Products(Base):
     __tablename__ = "products"
     id: Mapped[int] = mapped_column(primary_key= True)
     product_name: Mapped[str] = mapped_column(db.String(500), nullable = False)
     price: Mapped[float] = mapped_column(db.Float, nullable= False)
-    availability: Mapped[bool] = mapped_column(db.Boolean, default = True, nullable = False) #
+    availability: Mapped[bool] = mapped_column(db.Boolean, default = True, nullable = False) 
 
-### creating the orders table 
+### creating the orders table.
 
 class Orders(Base):
     __tablename__ = "orders"
     id: Mapped[int] = mapped_column(primary_key = True)
     order_date: Mapped[date] = mapped_column(db.Date, nullable = False)
-    status: Mapped[str] = mapped_column(db.String(100), default = "Placed", nullable = True) # created a status that default to "placed" for all new orders.
-    delivery_date: Mapped[date] = mapped_column(db.Date, nullable = True)
+    status: Mapped[str] = mapped_column(db.String(100), default = "Placed", nullable = True) # created a status that default to "placed" for all new orders. this column will later be update using the "Put" operation.
+    delivery_date: Mapped[date] = mapped_column(db.Date, nullable = True) # once order status is change to, the delivery date can be populate, it will be default as "null".
     customer_id: Mapped[int] = mapped_column(db.ForeignKey('customer.id'))
 
     customer: Mapped['Customer'] = db.relationship(back_populates = 'orders')
@@ -69,11 +72,15 @@ class Orders(Base):
     products: Mapped[List['Products']] = db.relationship(secondary = order_products)
 
 
+###executing table structure.
 with app.app_context():
     # db.drop_all() ### used to drop all tables and rerun a fresh instance.
     db.create_all()
 
-
+### creating the neccessary Schema and fields
+    ###customer.
+    ####products.
+    ###orders.
 
 class CustomerSchema(ma.Schema):
     id = fields.Integer(required = False)
@@ -82,6 +89,7 @@ class CustomerSchema(ma.Schema):
     phone = fields.String()
     username = fields.String(required = True)
     password = fields.String(required = True)
+
 
     class Meta:
         fields = ('id', 'customer_name', 'email', 'phone', 'username', 'password')
@@ -117,6 +125,8 @@ orders_schema = OrderSchema(many= True)
 product_schema = ProductSchema()
 products_schema = ProductSchema(many= True)
 
+### home screen
+
 @app.route('/')
 def home():
     return " Welcome to Rogers E-Commerce application. Lets get Started!!!! "
@@ -127,7 +137,7 @@ def home():
 ### UPDATE (PUT)
 #### DELETE (DELETE)
 
-### Get function for Customer table (shows all customers):
+### "Get" operation for Customer table (shows all customers):
 
 @app.route("/customers", methods = ['GET'])
 def get_customers():
@@ -137,7 +147,7 @@ def get_customers():
 
     return customers_schema.jsonify(customers)
 
-### Get function for Customer table (shows selected customers base on ID):
+### "Get" function for Customer table (shows selected customers base on ID):
 
 @app.route("/customers/<int:id>", methods = ['GET'])
 def get_customer(id):
@@ -149,7 +159,7 @@ def get_customer(id):
     
     return customer_schema.jsonify(result)
 
-### Post function for Customer Table:
+### "Post" function for Customer Table:
 
 @ app.route("/customers", methods = ['POST'])
 def add_customer():
@@ -166,7 +176,7 @@ def add_customer():
     return jsonify({'Message':"New customer info have been added."}), 201
 
 
-### PUT function for Customer Table:
+### "PUT" function for Customer Table:
 
 @app.route("/customers/<int:id>", methods = ["PUT"])
 def update_customer(id):
@@ -189,7 +199,7 @@ def update_customer(id):
     return jsonify({"Message":"Customer detail has been update. Thank you."})
 
 
-### Delete function for Customer Table
+### "Delete" function for Customer Table
 @app.route("/customers/<int:id>", methods = ["DELETE"])
 def delete_customer(id):
     query = delete(Customer).where(Customer.id == id)
@@ -203,13 +213,13 @@ def delete_customer(id):
     return jsonify({"Message": "The Customer you selected has been delete from our database. Thank you!"})
 
 
-##### Crud oerations for the Product table #####
+##### Crud operations for the Product table #####
 ### Get (Read)
 #### POST (CREATE)
 ### UPDATE (PUT)
 #### DELETE (DELETE)
 
-### Get function for Product table (shows all Products):
+### "Get" Operation for Product table (shows all Products):
 
 
 @app.route("/products", methods=['GET'])
@@ -221,7 +231,7 @@ def get_products():
 
     return products_schema.jsonify(products)
 
-### Get function for Product table (shows selected products base on ID):
+### "Get" Operation for Product table (shows selected products base on ID):
 
 @app.route("/products/<int:id>", methods=['GET'])
 def get_product(id):
@@ -234,7 +244,7 @@ def get_product(id):
     return product_schema.jsonify(result)
 
 
-### Post function for Product Table:
+### "Post" Operation for Product Table:
 
 @ app.route("/products", methods = ['POST'])
 def add_product():
@@ -250,13 +260,14 @@ def add_product():
 
     return jsonify({'Message':"New product info have been added."}), 201
 
-### PUT function for Product Table:
-    ###the following can be used to update price and availability 
+### "PUT" Operation for Product Table:
+    ###The following can be used to update price and availability 
+    ###The avialablity column is a boolean view as "True = 1" and "False = 0"
 
 @app.route("/products/<int:id>", methods = ['Put'])
 def update_product(id):
     query = select(Products).where(Products.id == id)
-    result = db.session.execute(query).scalars()
+    result = db.session.execute(query).scalar()
 
     if result is None:
         return jsonify({"Error": "Product cannot be found"}), 404
@@ -275,7 +286,8 @@ def update_product(id):
     return jsonify({"Message": "Product details have been updated"}) 
          
 
-### Delete function for Product Table:
+### "Delete" Operation for Product Table:
+    ### Deleting product from inventory.
 
 @app.route("/products/<int:id>", methods= ['DELETE'])
 def delete_product(id):
@@ -292,7 +304,7 @@ def delete_product(id):
 #### Orders Manipulation
 
 ### Order generator.
-    ###the status column will default to "Placed" once a new order is placed.
+    ###The status column will default to "Placed" once a new order is placed.
 
 @app.route("/orders", methods = ['POST'])
 def add_order():
@@ -313,6 +325,7 @@ def add_order():
     return jsonify({"Message": "Order Place. Estimated date will be sent shortly"}), 201
 
 ###Retrieve Order
+    ###Order is retrieved using the order id .
 
 @app.route("/orders/<int:id>", methods=['GET'])
 def get_order(id):
@@ -325,7 +338,8 @@ def get_order(id):
     return order_schema.jsonify(result)
 
 ### Track order: (using Put function)
-    ###allows you to updated order status and delivery date
+    ###Allows you to updated order status and delivery date.
+        ###this will allow the customer to track orders once update by the clerk/user
 
 @app.route("/orders/<int:id>", methods= ['PUT'])
 def update_order_status(id):
